@@ -18,7 +18,7 @@ let cellsCount;
 let numbers;
 let interval;
 let moves;
-let time;
+let seconds;
 
 
 function createResultsTable() {
@@ -89,7 +89,7 @@ function createBtns(isStarted = true) {
 
 function handleStart(e) {
   moves = 0;
-  time = 0;
+  seconds = 0;
   localStorage.removeItem('game');
   startGame();
 }
@@ -98,10 +98,7 @@ function handleSave(e) {
   const game = {};
 
   game.moves = document.querySelector('.stats__moves span').innerHTML;
-
-  const time = document.querySelector('.stats__time span').innerHTML.split(':');
-  game.time = time[0] * 60 + time[1];
-
+  game.seconds = seconds;
   game.cellsCount = document.querySelector('.difficulty__current span').innerHTML.split('x')[0] ** 2;
   game.cells = cells;
 
@@ -132,27 +129,38 @@ function createStatsBar() {
   const statsBar = document.createElement('div');
   statsBar.className = 'stats';
 
+  let timeString;
+
+  if (seconds) {
+    const hours = Math.floor((seconds / 60 / 60) % 24),
+      minutes = Math.floor((seconds / 60) % 60);
+
+    timeString = (hours ? hours + ':' : '') + (minutes ? minutes + ':' : '0:') + seconds % 60;
+  }
+
   statsBar.innerHTML = `
     <div class="stats__moves">
       Moves: <span>${moves ? moves : 0}</span>
     </div>
 
     <div class="stats__time">
-      Time: <span>${time ? Math.floor(time / 60) + ':' + (time % 60 > 10 ? time % 60 : '0' + time % 60) : '0:0'}</span>
+      Time: <span>${seconds ? timeString : '0:0'}</span>
     </div>
   `;
 
-  startInterval(time);
+  startInterval(seconds);
 
   return statsBar;
 }
 
 function startInterval(start) {
-  let seconds = start ?? 0;
+  seconds = start ?? 0;
   interval = setInterval(() => {
     const time = document.querySelector('.stats__time span');
     seconds++;
-    time.innerHTML = `${Math.floor(seconds / 60)}:${seconds % 60 < 10 ? '0' + seconds % 60 : seconds % 60}`;
+    const hours = Math.floor((seconds / 60 / 60) % 24),
+      minutes = Math.floor((seconds / 60) % 60);
+    time.innerHTML = (hours ? hours + ':' : '') + (minutes ? minutes + ':' : '0:') + seconds % 60;
   }, 1000);
 }
 
@@ -319,7 +327,7 @@ function handleSizeChange(e) {
   e.preventDefault();
   cellsCount = e.target.innerHTML.split('x')[0] ** 2;
   moves = 0;
-  time = 0;
+  seconds = 0;
   cellSize = FIELD_WIDTH / Math.sqrt(cellsCount);
   localStorage.removeItem('game');
   startGame();
@@ -375,7 +383,7 @@ function startGame() {
   if (game) {
     cellsCount = game?.cellsCount ?? 16;
     moves = game?.moves ?? 0;
-    time = game?.time ?? 0;
+    seconds = game?.seconds ?? 0;
     emptyCell = game.cells.find(cell => cell.value === 0);
     prevCells = game.cells;
   } else {
