@@ -73,12 +73,16 @@ function createBtns(isStarted = true) {
   resultsBtn.innerHTML = 'Results';
   resultsBtn.addEventListener('click', handleResultsShow);
 
-  const toggleAudio = document.createElement('button');
-  toggleAudio.className = isAudio ? 'btn btn_active' : 'btn';
-  toggleAudio.innerHTML = 'Sound';
-  toggleAudio.addEventListener('click', handleAudioToggle);
+  const audioLabel = document.createElement('label');
+  const toggleAudio = document.createElement('input');
+  const audioText = document.createElement('span');
 
-  btns.append(restartBtn, saveBtn, resultsBtn, toggleAudio);
+  audioText.innerHTML = 'Sound';
+  toggleAudio.type = 'checkbox';
+  audioLabel.append(toggleAudio, audioText);
+  toggleAudio.addEventListener('change', handleAudioToggle);
+
+  btns.append(restartBtn, saveBtn, resultsBtn, audioLabel);
 
   return btns;
 }
@@ -119,8 +123,8 @@ function handleResultsShow(e) {
 }
 
 function handleAudioToggle(e) {
-  e.target.classList.toggle('btn_active');
-  isAudio = !isAudio;
+  isAudio = e.target.checked;
+  console.log(isAudio)
   localStorage.setItem('isAudio', isAudio);
 }
 
