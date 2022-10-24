@@ -1,4 +1,7 @@
 const FIELD_WIDTH = 320;
+const CLICK_AUDIO = new Audio('./audio/click.mp3');
+
+let isAudio = true;
 
 let emptyCell = {
   top: 0,
@@ -32,9 +35,19 @@ function createBtns() {
   resultsBtn.innerHTML = 'Results';
   resultsBtn.addEventListener('click', (e) => { console.log(e.target.innerHTML) });
 
-  btns.append(restartBtn, saveBtn, resultsBtn);
+  const toggleAudio = document.createElement('button');
+  toggleAudio.className = 'btn active';
+  toggleAudio.innerHTML = 'Sound';
+  toggleAudio.addEventListener('click', handleAudioToggle);
+
+  btns.append(restartBtn, saveBtn, resultsBtn, toggleAudio);
 
   return btns;
+}
+
+function handleAudioToggle(e) {
+  e.target.classList.toggle('active');
+  isAudio = !isAudio;
 }
 
 function createStatsBar() {
@@ -169,6 +182,8 @@ function moveCell(index, cellsCount) {
   if (leftDiff + topDiff > 1) return;
 
   document.querySelector('.stats__moves span').innerHTML++;
+
+  if (isAudio) CLICK_AUDIO.play();
 
   cell.elem.style.left = emptyCell.left * cellSize + 'px';
   cell.elem.style.top = emptyCell.top * cellSize + 'px';
