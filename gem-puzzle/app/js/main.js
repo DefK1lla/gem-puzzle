@@ -1,5 +1,3 @@
-alert('Привет! К сожалению, не успел сделать dragndrop на мобильных. Буду очень благодарен, если вернёшься позже.');
-
 const FIELD_WIDTH = 320;
 const CLICK_AUDIO = new Audio('./audio/click.mp3');
 
@@ -209,9 +207,41 @@ function createCell(index, value, cellSize, position) {
   cell.addEventListener('click', (e) => handleCellClick(e, index));
   cell.addEventListener('dragstart', (e) => handleDragStart(e, index));
   cell.addEventListener('dragend', (e) => handleDragEnd(e, index));
+  cell.addEventListener('touchmove', (e) => handleTouchEnd(e, index));
+
 
   return cell;
 };
+
+function getConditions(e) {
+  const emptyPos = {
+    left: emptyCell.left * cellSize,
+    top: emptyCell.top * cellSize
+  };
+  const dragPos = {
+    left: e.pageX - fieldOffset.left,
+    top: e.pageY - fieldOffset.top
+  }
+  const xCondition = dragPos.left >= emptyPos.left && dragPos.left <= emptyPos.left + cellSize,
+    yCondition = dragPos.top >= emptyPos.top && dragPos.top <= emptyPos.top + cellSize;
+
+  return {
+    xCondition,
+    yCondition
+  };
+}
+
+function handleTouchEnd(e, index) {
+  e.preventDefault();
+
+  const cell = cells[index];
+  if (isCellInteractive(cell)) return e.preventDefault();
+
+  const touch = e.targetTouches[0]
+  const { xCondition, yCondition } = getConditions(touch);
+
+  if (xCondition && yCondition) moveCell(index);
+}
 
 function handleDragStart(e, index) {
   const cell = cells[index];
@@ -221,17 +251,8 @@ function handleDragStart(e, index) {
 
 function handleDragEnd(e, index) {
   const cell = cells[index];
-  const emptyPos = {
-    left: emptyCell.left * cellSize,
-    top: emptyCell.top * cellSize
-  };
-  const dragPos = {
-    left: e.pageX - fieldOffset.left,
-    top: e.pageY - fieldOffset.top
-  }
 
-  const xCondition = dragPos.left >= emptyPos.left && dragPos.left <= emptyPos.left + cellSize,
-    yCondition = dragPos.top >= emptyPos.top && dragPos.top <= emptyPos.top + cellSize;
+  const { xCondition, yCondition } = getConditions(e);
 
   if (xCondition && yCondition) moveCell(index);
   requestAnimationFrame(() => cell.elem.style.visibility = 'visible', 0);
