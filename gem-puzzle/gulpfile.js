@@ -85,6 +85,7 @@ function builder() {
     return src([
         'app/css/style.min.css',
         'app/fonts/**/*',
+        'app/audio/**/*',
         'app/js/main.min.js',
         'app/*.html'
     ], { base: 'app' })

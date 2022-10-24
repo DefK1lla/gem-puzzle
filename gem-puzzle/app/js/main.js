@@ -1,7 +1,7 @@
 const FIELD_WIDTH = 320;
 const CLICK_AUDIO = new Audio('./audio/click.mp3');
 
-let isAudio = true;
+let isAudio = JSON.parse(localStorage.getItem('isAudio')) ?? true;
 
 let emptyCell = {
   top: 0,
@@ -13,8 +13,11 @@ let cells = [];
 cells.push(emptyCell);
 
 let cellSize;
+let cellsCount;
 let numbers;
 let interval;
+let moves;
+let time;
 
 function createBtns() {
   const btns = document.createElement('div');
@@ -22,21 +25,21 @@ function createBtns() {
 
   const restartBtn = document.createElement('button');
   restartBtn.className = 'btn';
-  restartBtn.innerHTML = 'Restart';
-  restartBtn.addEventListener('click', (e) => { console.log(e.target.innerHTML) });
+  restartBtn.innerHTML = 'Start';
+  restartBtn.addEventListener('click', handleStart);
 
   const saveBtn = document.createElement('button');
   saveBtn.className = 'btn';
   saveBtn.innerHTML = 'Save';
-  saveBtn.addEventListener('click', (e) => { console.log(e.target.innerHTML) });
+  saveBtn.addEventListener('click', handleSave);
 
   const resultsBtn = document.createElement('button');
   resultsBtn.className = 'btn';
   resultsBtn.innerHTML = 'Results';
-  resultsBtn.addEventListener('click', (e) => { console.log(e.target.innerHTML) });
+  resultsBtn.addEventListener('click', handleResultsShow);
 
   const toggleAudio = document.createElement('button');
-  toggleAudio.className = 'btn active';
+  toggleAudio.className = isAudio ? 'btn active' : 'btn';
   toggleAudio.innerHTML = 'Sound';
   toggleAudio.addEventListener('click', handleAudioToggle);
 
@@ -45,9 +48,37 @@ function createBtns() {
   return btns;
 }
 
+function handleStart(e) {
+  moves = 0;
+  time = 0;
+  localStorage.removeItem('game');
+  startGame();
+}
+
+function handleSave(e) {
+  const game = {};
+
+  game.field = document.querySelector('.field').innerHTML;
+  game.moves = document.querySelector('.stats__moves span').innerHTML;
+  const time = document.querySelector('.stats__time span').innerHTML.split(':');
+  game.time = time[0] * 60 + time[1];
+  game.cellsCount = document.querySelector('.difficulty__current span').innerHTML.split('x')[0] ** 2;
+  game.cells = cells;
+
+  const emptyIndex = game.cells.findIndex(cell => cell.value === 0);
+  game.cells.splice(emptyIndex, 1, emptyCell);
+
+  localStorage.setItem('game', JSON.stringify(game));
+}
+
+function handleResultsShow(e) {
+
+}
+
 function handleAudioToggle(e) {
   e.target.classList.toggle('active');
   isAudio = !isAudio;
+  localStorage.setItem('isAudio', isAudio);
 }
 
 function createStatsBar() {
@@ -56,23 +87,21 @@ function createStatsBar() {
 
   statsBar.innerHTML = `
     <div class="stats__moves">
-      Moves: <span>0</span>
+      Moves: <span>${moves ? moves : 0}</span>
     </div>
 
     <div class="stats__time">
-      Time: <span>0:0</span>
+      Time: <span>${time ? Math.floor(time / 60) + ':' + (time % 60 > 10 ? time % 60 : '0' + time % 60) : '0:0'}</span>
     </div>
   `;
 
-  let seconds = 0;
-
-  startInterval();
+  startInterval(time);
 
   return statsBar;
 }
 
-function startInterval() {
-  let seconds = 0;
+function startInterval(start) {
+  let seconds = start ?? 0;
   interval = setInterval(() => {
     const time = document.querySelector('.stats__time span');
     seconds++;
@@ -85,34 +114,42 @@ function stopInterval() {
   interval = null;
 }
 
-function createField(cellsCount) {
+function createField(prevCells) {
   cellSize = FIELD_WIDTH / Math.sqrt(cellsCount);
   const field = document.createElement('div');
   field.className = 'field';
   field.style.width = FIELD_WIDTH + 'px';
   field.style.height = FIELD_WIDTH + 'px';
 
-  for (let i = 1; i < cellsCount; i++) {
-    const position = {
-      left: i % Math.sqrt(cellsCount),
-      top: (i - (i % Math.sqrt(cellsCount))) / Math.sqrt(cellsCount),
-    };
-    const value = numbers[i];
-    const cell = createCell(i, value, cellSize, position, cellsCount);
-    field.append(cell);
+  for (let i = 0; i < cellsCount; i++) {
+    if (prevCells && prevCells[i]) {
+      if (prevCells[i].value === 0) continue;
+      const cell = createCell(i, prevCells[i].value, cellSize, prevCells[i], cellsCount);
+      field.append(cell);
+    } else {
+      const position = {
+        left: i % Math.sqrt(cellsCount),
+        top: (i - (i % Math.sqrt(cellsCount))) / Math.sqrt(cellsCount),
+      };
+      const value = numbers[i];
+      if (value === 0) continue;
+
+      const cell = createCell(i, value, cellSize, position, cellsCount);
+      field.append(cell);
+    }
   }
 
   return field;
 }
 
-function createCell(index, value, cellWSize, position, cellsCount) {
+function createCell(index, value, cellSize, position) {
   const cell = document.createElement('div');
   cell.className = 'cell';
 
-  cell.style.width = cellWSize + 'px';
-  cell.style.height = cellWSize + 'px';
-  cell.style.left = position.left * cellWSize + 'px';
-  cell.style.top = position.top * cellWSize + 'px';
+  cell.style.width = cellSize + 'px';
+  cell.style.height = cellSize + 'px';
+  cell.style.left = position.left * cellSize + 'px';
+  cell.style.top = position.top * cellSize + 'px';
 
   cells.push({
     left: position.left,
@@ -123,7 +160,7 @@ function createCell(index, value, cellWSize, position, cellsCount) {
 
   cell.innerHTML = value;
 
-  cell.addEventListener('click', (e) => moveCell(index, cellsCount));
+  cell.addEventListener('click', (e) => moveCell(index));
 
   return cell;
 };
@@ -136,7 +173,7 @@ function createDifficultyPanel(size) {
 
   const difficultyCurrent = document.createElement('div');
   difficultyCurrent.className = 'difficulty__current';
-  difficultyCurrent.innerHTML = `Frame size: ${size}`;
+  difficultyCurrent.innerHTML = `Frame size: <span>${size}</span>`;
 
   difficulty.append(difficultyCurrent);
 
@@ -170,15 +207,17 @@ function createDifficultyPanel(size) {
 
 function handleSizeChange(e) {
   e.preventDefault();
-  const cellsCount = e.target.innerHTML.split('x')[0] ** 2;
-  startGame(cellsCount);
+  cellsCount = e.target.innerHTML.split('x')[0] ** 2;
+  moves = 0;
+  time = 0;
+  localStorage.removeItem('game');
+  startGame();
 }
 
-function moveCell(index, cellsCount) {
+function moveCell(index) {
   const cell = cells[index];
   const leftDiff = Math.abs(emptyCell.left - cell.left),
     topDiff = Math.abs(emptyCell.top - cell.top);
-
   if (leftDiff + topDiff > 1) return;
 
   document.querySelector('.stats__moves span').innerHTML++;
@@ -211,6 +250,8 @@ function moveCell(index, cellsCount) {
     document.querySelector('.field').innerHTML = `Hooray! You solved the puzzle in ${time} and ${moves} moves!`;
     saveResults(moves, time);
   }
+
+
 }
 
 function saveResults(moves, time) {
@@ -220,8 +261,28 @@ function saveResults(moves, time) {
   localStorage.setItem('results', JSON.stringify(results.sort((a, b) => b.moves - a.moves)));
 }
 
-function startGame(cellsCount) {
-  numbers = [...new Array(cellsCount).keys()]
+function startGame() {
+  const game = JSON.parse(localStorage.getItem('game'));
+  let prevCells;
+  if (game) {
+    cellsCount = game?.cellsCount ?? 16;
+    moves = game?.moves ?? 0;
+    time = game?.time ?? 0;
+    emptyCell = game.cells.find(cell => cell.value === 0);
+    prevCells = game.cells;
+  } else {
+    emptyCell = {
+      top: 0,
+      left: 0,
+      value: 0
+    };
+    cells = [];
+    cells.push(emptyCell);
+  }
+
+  if (!cellsCount) cellsCount = 16;
+
+  numbers = [...new Array(cellsCount - 1).keys()]
     .map(x => x + 1)
     .sort((a, b) => Math.random() - 0.5);
   numbers.unshift(0);
@@ -229,29 +290,21 @@ function startGame(cellsCount) {
   document.body.innerHTML = '';
   stopInterval();
 
-  emptyCell = {
-    top: 0,
-    left: 0,
-    value: 0
-  };
-
-  cells = [];
-  cells.push(emptyCell);
-
   const btns = createBtns();
   document.body.append(btns);
 
   const statsBar = createStatsBar();
   document.body.append(statsBar);
 
-  const field = createField(cellsCount);
+  const field = createField(prevCells);
   document.body.append(field);
 
-  const diffuclity = createDifficultyPanel(cellsCount);
-  document.body.append(diffuclity);
+  const diffuclty = createDifficultyPanel(cellsCount);
+  document.body.append(diffuclty);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const cellsCount = localStorage.getItem('cellsCount') ?? 16;
-  startGame(cellsCount);
-});
+function init() {
+  startGame();
+}
+
+document.addEventListener('DOMContentLoaded', init);
