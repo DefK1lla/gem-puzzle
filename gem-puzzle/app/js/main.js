@@ -34,16 +34,16 @@ function createResultsTable() {
     ${!results
       ? `
         <tr>
-          <th colspan="3">
+          <td colspan="3">
             <p class="results-placeholder">You have never won</p>
-          </th>
+          </td>
         </tr>
       `
       : results.map((res, index) => (`
         <tr>
-          <th>${index + 1}</th>
-          <th>${res.moves}</th>
-          <th>${res.time}</th>
+          <td>${index + 1}</td>
+          <td>${res.moves}</td>
+          <td>${res.time}</td>
         </tr>
       `))
     }
