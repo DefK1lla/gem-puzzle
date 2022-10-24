@@ -119,7 +119,7 @@ function handleResultsShow(e) {
 }
 
 function handleAudioToggle(e) {
-  e.target.classList.toggle('active');
+  e.target.classList.toggle('btn_active');
   isAudio = !isAudio;
   localStorage.setItem('isAudio', isAudio);
 }
@@ -235,7 +235,7 @@ function handleTouchEnd(e, index) {
   e.preventDefault();
 
   const cell = cells[index];
-  if (isCellInteractive(cell)) return e.preventDefault();
+  if (isCellNonInteractive(cell)) return e.preventDefault();
 
   const touch = e.targetTouches[0]
   const { xCondition, yCondition } = getConditions(touch);
@@ -245,7 +245,7 @@ function handleTouchEnd(e, index) {
 
 function handleDragStart(e, index) {
   const cell = cells[index];
-  if (isCellInteractive(cell)) return e.preventDefault();
+  if (isCellNonInteractive(cell)) return e.preventDefault();
   requestAnimationFrame(() => cell.elem.style.visibility = 'hidden', 0);
 }
 
@@ -258,7 +258,7 @@ function handleDragEnd(e, index) {
   requestAnimationFrame(() => cell.elem.style.visibility = 'visible', 0);
 }
 
-function isCellInteractive(cell) {
+function isCellNonInteractive(cell) {
   const leftDiff = Math.abs(emptyCell.left - cell.left),
     topDiff = Math.abs(emptyCell.top - cell.top);
   return leftDiff + topDiff > 1;
@@ -267,7 +267,7 @@ function isCellInteractive(cell) {
 function handleCellClick(e, index) {
   const cell = cells[index];
 
-  if (isCellInteractive(cell)) return;
+  if (isCellNonInteractive(cell)) return;
   moveCell(index);
 }
 
@@ -354,6 +354,7 @@ function moveCell(index) {
       time = document.querySelector('.stats__time span').innerHTML;
     document.querySelector('.field').innerHTML = `Hooray! You solved the puzzle in ${time} and ${moves} moves!`;
     saveResults(moves, time);
+    localStorage.removeItem('game');
   }
 }
 
