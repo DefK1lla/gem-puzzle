@@ -74,7 +74,7 @@ function createBtns(isStarted = true) {
   resultsBtn.addEventListener('click', handleResultsShow);
 
   const toggleAudio = document.createElement('button');
-  toggleAudio.className = isAudio ? 'btn active' : 'btn';
+  toggleAudio.className = isAudio ? 'btn btn_active' : 'btn';
   toggleAudio.innerHTML = 'Sound';
   toggleAudio.addEventListener('click', handleAudioToggle);
 
