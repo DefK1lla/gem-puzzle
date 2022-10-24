@@ -19,7 +19,40 @@ let interval;
 let moves;
 let time;
 
-function createBtns() {
+
+function createResultsTable() {
+  const table = document.createElement('table');
+  const results = JSON.parse(localStorage.getItem('results'));
+
+  table.innerHTML = `
+    <tr>
+      <th>Position</th>
+      <th>Moves</th>
+      <th>Time</th>
+    </tr>
+
+    ${!results
+      ? `
+        <tr>
+          <th colspan="3">
+            <p class="results-placeholder">You have never won</p>
+          </th>
+        </tr>
+      `
+      : results.map((res, index) => (`
+        <tr>
+          <th>${index + 1}</th>
+          <th>${res.moves}</th>
+          <th>${res.time}</th>
+        </tr>
+      `))
+    }
+  `;
+
+  return table;
+}
+
+function createBtns(isStarted = true) {
   const btns = document.createElement('div');
   btns.className = 'btns';
 
@@ -31,6 +64,7 @@ function createBtns() {
   const saveBtn = document.createElement('button');
   saveBtn.className = 'btn';
   saveBtn.innerHTML = 'Save';
+  saveBtn.disabled = !isStarted;
   saveBtn.addEventListener('click', handleSave);
 
   const resultsBtn = document.createElement('button');
@@ -56,12 +90,14 @@ function handleStart(e) {
 }
 
 function handleSave(e) {
+  console.log(1)
   const game = {};
 
-  game.field = document.querySelector('.field').innerHTML;
   game.moves = document.querySelector('.stats__moves span').innerHTML;
+
   const time = document.querySelector('.stats__time span').innerHTML.split(':');
   game.time = time[0] * 60 + time[1];
+
   game.cellsCount = document.querySelector('.difficulty__current span').innerHTML.split('x')[0] ** 2;
   game.cells = cells;
 
@@ -72,7 +108,14 @@ function handleSave(e) {
 }
 
 function handleResultsShow(e) {
+  stopInterval();
+  document.body.innerHTML = '';
 
+  const btns = createBtns(false);
+  document.body.append(btns);
+
+  const table = createResultsTable();
+  document.body.append(table);
 }
 
 function handleAudioToggle(e) {
@@ -245,13 +288,12 @@ function moveCell(index) {
   });
 
   if (isFinished) {
+    stopInterval();
     const moves = document.querySelector('.stats__moves span').innerHTML,
       time = document.querySelector('.stats__time span').innerHTML;
     document.querySelector('.field').innerHTML = `Hooray! You solved the puzzle in ${time} and ${moves} moves!`;
     saveResults(moves, time);
   }
-
-
 }
 
 function saveResults(moves, time) {
