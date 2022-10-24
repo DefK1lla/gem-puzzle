@@ -1,20 +1,17 @@
 const FIELD_WIDTH = 320;
 
-let cellSize;
-
-const emptyCell = {
+let emptyCell = {
   top: 0,
   left: 0,
   value: 0
 };
 
-const cells = [];
+let cells = [];
 cells.push(emptyCell);
 
-const numbers = [...new Array(15).keys()]
-  .map(x => x + 1)
-  .sort((a, b) => Math.random() - 0.5);
-numbers.unshift(0);
+let cellSize;
+let numbers;
+let interval;
 
 function createBtns() {
   const btns = document.createElement('div');
@@ -40,6 +37,41 @@ function createBtns() {
   return btns;
 }
 
+function createStatsBar() {
+  const statsBar = document.createElement('div');
+  statsBar.className = 'stats';
+
+  statsBar.innerHTML = `
+    <div class="stats__moves">
+      Moves: <span>0</span>
+    </div>
+
+    <div class="stats__time">
+      Time: <span>0:0</span>
+    </div>
+  `;
+
+  let seconds = 0;
+
+  startInterval();
+
+  return statsBar;
+}
+
+function startInterval() {
+  let seconds = 0;
+  interval = setInterval(() => {
+    const time = document.querySelector('.stats__time span');
+    seconds++;
+    time.innerHTML = `${Math.floor(seconds / 60)}:${seconds % 60 < 10 ? '0' + seconds % 60 : seconds % 60}`;
+  }, 1000);
+}
+
+function stopInterval() {
+  clearInterval(interval);
+  interval = null;
+}
+
 function createField(cellsCount) {
   cellSize = FIELD_WIDTH / Math.sqrt(cellsCount);
   const field = document.createElement('div');
@@ -49,18 +81,18 @@ function createField(cellsCount) {
 
   for (let i = 1; i < cellsCount; i++) {
     const position = {
-      left: i % 4,
-      top: (i - (i % 4)) / 4,
+      left: i % Math.sqrt(cellsCount),
+      top: (i - (i % Math.sqrt(cellsCount))) / Math.sqrt(cellsCount),
     };
     const value = numbers[i];
-    const cell = createCell(i, value, cellSize, position);
+    const cell = createCell(i, value, cellSize, position, cellsCount);
     field.append(cell);
   }
 
   return field;
 }
 
-function createCell(index, value, cellWSize, position) {
+function createCell(index, value, cellWSize, position, cellsCount) {
   const cell = document.createElement('div');
   cell.className = 'cell';
 
@@ -78,17 +110,65 @@ function createCell(index, value, cellWSize, position) {
 
   cell.innerHTML = value;
 
-  cell.addEventListener('click', (e) => moveCell(index));
+  cell.addEventListener('click', (e) => moveCell(index, cellsCount));
 
   return cell;
 };
 
-function moveCell(index) {
+function createDifficultyPanel(size) {
+  size = size ? Math.sqrt(size) + 'x' + Math.sqrt(size) : '4x4';
+
+  const difficulty = document.createElement('div');
+  difficulty.className = 'difficulty';
+
+  const difficultyCurrent = document.createElement('div');
+  difficultyCurrent.className = 'difficulty__current';
+  difficultyCurrent.innerHTML = `Frame size: ${size}`;
+
+  difficulty.append(difficultyCurrent);
+
+  const difficultyList = document.createElement('ul');
+  difficultyList.className = 'difficulty__list';
+
+  for (let i = 3; i < 9; i++) {
+    const difficultyItem = document.createElement('li');
+    difficultyItem.className = 'difficulty__item';
+
+    const difficultyLink = document.createElement('a');
+    difficultyLink.href = '#';
+    difficultyLink.className = 'difficulty__link';
+    difficultyLink.innerHTML = i + 'x' + i;
+
+    difficultyLink.addEventListener('click', handleSizeChange);
+
+    difficultyItem.append(difficultyLink);
+    difficultyList.append(difficultyItem);
+  }
+
+  const difficultyOther = document.createElement('div');
+  difficultyOther.className = 'difficulty__other';
+  difficultyOther.innerHTML = 'Other sizes: ';
+  difficultyOther.append(difficultyList);
+
+  difficulty.append(difficultyOther);
+
+  return difficulty;
+};
+
+function handleSizeChange(e) {
+  e.preventDefault();
+  const cellsCount = e.target.innerHTML.split('x')[0] ** 2;
+  startGame(cellsCount);
+}
+
+function moveCell(index, cellsCount) {
   const cell = cells[index];
   const leftDiff = Math.abs(emptyCell.left - cell.left),
     topDiff = Math.abs(emptyCell.top - cell.top);
 
   if (leftDiff + topDiff > 1) return;
+
+  document.querySelector('.stats__moves span').innerHTML++;
 
   cell.elem.style.left = emptyCell.left * cellSize + 'px';
   cell.elem.style.top = emptyCell.top * cellSize + 'px';
@@ -106,17 +186,57 @@ function moveCell(index) {
     if (cell === emptyCell) return true;
 
     return emptyCell.top === 0 && emptyCell.left === 0
-      ? cell.value === cell.top * 4 + cell.left
-      : cell.value === (cell.top * 4 + cell.left) + 1
+      ? cell.value === cell.top * Math.sqrt(cellsCount) + cell.left
+      : cell.value === (cell.top * Math.sqrt(cellsCount) + cell.left) + 1;
   });
 
-  if (isFinished) document.querySelector('.field').innerHTML = 'You win'
+  if (isFinished) {
+    const moves = document.querySelector('.stats__moves span').innerHTML,
+      time = document.querySelector('.stats__time span').innerHTML;
+    document.querySelector('.field').innerHTML = `Hooray! You solved the puzzle in ${time} and ${moves} moves!`;
+    saveResults(moves, time);
+  }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function saveResults(moves, time) {
+  const prevResults = localStorage.getItem('results');
+  const results = prevResults ? JSON.parse(prevResults) : [];
+  results.push({ moves, time });
+  localStorage.setItem('results', JSON.stringify(results.sort((a, b) => b.moves - a.moves)));
+}
+
+function startGame(cellsCount) {
+  numbers = [...new Array(cellsCount).keys()]
+    .map(x => x + 1)
+    .sort((a, b) => Math.random() - 0.5);
+  numbers.unshift(0);
+
+  document.body.innerHTML = '';
+  stopInterval();
+
+  emptyCell = {
+    top: 0,
+    left: 0,
+    value: 0
+  };
+
+  cells = [];
+  cells.push(emptyCell);
+
   const btns = createBtns();
   document.body.append(btns);
 
-  const field = createField(16);
+  const statsBar = createStatsBar();
+  document.body.append(statsBar);
+
+  const field = createField(cellsCount);
   document.body.append(field);
+
+  const diffuclity = createDifficultyPanel(cellsCount);
+  document.body.append(diffuclity);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const cellsCount = localStorage.getItem('cellsCount') ?? 16;
+  startGame(cellsCount);
 });
