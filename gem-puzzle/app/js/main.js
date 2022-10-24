@@ -316,6 +316,7 @@ function handleSizeChange(e) {
   cellsCount = e.target.innerHTML.split('x')[0] ** 2;
   moves = 0;
   time = 0;
+  cellSize = FIELD_WIDTH / Math.sqrt(cellsCount);
   localStorage.removeItem('game');
   startGame();
 }
