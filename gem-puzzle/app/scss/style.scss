@@ -56,6 +56,7 @@
 
   font-size: 25px;
   text-align: center;
+  user-select: none;
 
   border: 1px solid #000;
 }
@@ -69,10 +70,23 @@
   justify-content: center;
   align-items: center;
 
+  background: #fff;
   border: 1px solid #000;
   cursor: pointer;
+  visibility: visible;
+  opacity: 1;
 
-  transition: all 0.3s linear;
+  transition: top 0.3s linear, left 0.3s linear;
+
+  &.hidden {
+    visibility: hidden;
+  }
+}
+
+.empty {
+  background: transparent;
+  font-size: 0;
+  color: none;
 }
 
 .difficulty {

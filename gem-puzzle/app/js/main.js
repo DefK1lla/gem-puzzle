@@ -1,3 +1,5 @@
+alert('Привет! К сожалению, не успел сделать dragndrop на мобильных. Буду очень благодарен, если вернёшься позже.');
+
 const FIELD_WIDTH = 320;
 const CLICK_AUDIO = new Audio('./audio/click.mp3');
 
@@ -12,6 +14,7 @@ let emptyCell = {
 let cells = [];
 cells.push(emptyCell);
 
+let fieldOffset;
 let cellSize;
 let cellsCount;
 let numbers;
@@ -90,7 +93,6 @@ function handleStart(e) {
 }
 
 function handleSave(e) {
-  console.log(1)
   const game = {};
 
   game.moves = document.querySelector('.stats__moves span').innerHTML;
@@ -181,13 +183,14 @@ function createField(prevCells) {
       field.append(cell);
     }
   }
-
+  field.ondragover = e => e.preventDefault();
   return field;
 }
 
 function createCell(index, value, cellSize, position) {
   const cell = document.createElement('div');
   cell.className = 'cell';
+  cell.draggable = true;
 
   cell.style.width = cellSize + 'px';
   cell.style.height = cellSize + 'px';
@@ -203,10 +206,49 @@ function createCell(index, value, cellSize, position) {
 
   cell.innerHTML = value;
 
-  cell.addEventListener('click', (e) => moveCell(index));
+  cell.addEventListener('click', (e) => handleCellClick(e, index));
+  cell.addEventListener('dragstart', (e) => handleDragStart(e, index));
+  cell.addEventListener('dragend', (e) => handleDragEnd(e, index));
 
   return cell;
 };
+
+function handleDragStart(e, index) {
+  const cell = cells[index];
+  if (isCellInteractive(cell)) return e.preventDefault();
+  requestAnimationFrame(() => cell.elem.style.visibility = 'hidden', 0);
+}
+
+function handleDragEnd(e, index) {
+  const cell = cells[index];
+  const emptyPos = {
+    left: emptyCell.left * cellSize,
+    top: emptyCell.top * cellSize
+  };
+  const dragPos = {
+    left: e.pageX - fieldOffset.left,
+    top: e.pageY - fieldOffset.top
+  }
+
+  const xCondition = dragPos.left >= emptyPos.left && dragPos.left <= emptyPos.left + cellSize,
+    yCondition = dragPos.top >= emptyPos.top && dragPos.top <= emptyPos.top + cellSize;
+
+  if (xCondition && yCondition) moveCell(index);
+  requestAnimationFrame(() => cell.elem.style.visibility = 'visible', 0);
+}
+
+function isCellInteractive(cell) {
+  const leftDiff = Math.abs(emptyCell.left - cell.left),
+    topDiff = Math.abs(emptyCell.top - cell.top);
+  return leftDiff + topDiff > 1;
+}
+
+function handleCellClick(e, index) {
+  const cell = cells[index];
+
+  if (isCellInteractive(cell)) return;
+  moveCell(index);
+}
 
 function createDifficultyPanel(size) {
   size = size ? Math.sqrt(size) + 'x' + Math.sqrt(size) : '4x4';
@@ -259,9 +301,6 @@ function handleSizeChange(e) {
 
 function moveCell(index) {
   const cell = cells[index];
-  const leftDiff = Math.abs(emptyCell.left - cell.left),
-    topDiff = Math.abs(emptyCell.top - cell.top);
-  if (leftDiff + topDiff > 1) return;
 
   document.querySelector('.stats__moves span').innerHTML++;
 
@@ -300,7 +339,7 @@ function saveResults(moves, time) {
   const prevResults = localStorage.getItem('results');
   const results = prevResults ? JSON.parse(prevResults) : [];
   results.push({ moves, time });
-  localStorage.setItem('results', JSON.stringify(results.sort((a, b) => b.moves - a.moves)));
+  localStorage.setItem('results', JSON.stringify(results.sort((a, b) => b.moves - a.moves)).slice(0, 11));
 }
 
 function startGame() {
@@ -340,6 +379,10 @@ function startGame() {
 
   const field = createField(prevCells);
   document.body.append(field);
+  fieldOffset = {
+    left: field.getBoundingClientRect().left,
+    top: field.getBoundingClientRect().top
+  };
 
   const diffuclty = createDifficultyPanel(cellsCount);
   document.body.append(diffuclty);
