@@ -68,6 +68,11 @@ function createBtns(isStarted = true) {
   saveBtn.disabled = !isStarted;
   saveBtn.addEventListener('click', handleSave);
 
+  const loadBtn = document.createElement('button');
+  loadBtn.className = 'btn';
+  loadBtn.innerHTML = 'Load';
+  loadBtn.addEventListener('click', handleLoad);
+
   const resultsBtn = document.createElement('button');
   resultsBtn.className = 'btn';
   resultsBtn.innerHTML = 'Results';
@@ -83,7 +88,7 @@ function createBtns(isStarted = true) {
   audioLabel.append(toggleAudio, audioText);
   toggleAudio.addEventListener('change', handleAudioToggle);
 
-  btns.append(restartBtn, saveBtn, resultsBtn, audioLabel);
+  btns.append(restartBtn, saveBtn, loadBtn, resultsBtn, audioLabel);
 
   return btns;
 }
@@ -91,8 +96,19 @@ function createBtns(isStarted = true) {
 function handleStart(e) {
   moves = 0;
   seconds = 0;
-  localStorage.removeItem('game');
   startGame();
+}
+
+function handleLoad(e) {
+  const game = JSON.parse(localStorage.getItem('game'));
+  if (!game) return;
+  cellsCount = game?.cellsCount ?? 16;
+  moves = game?.moves ?? 0;
+  seconds = game?.seconds ?? 0;
+  emptyCell = game.cells.find(cell => cell.value === 0);
+  const prevCells = game.cells;
+  cells = [];
+  startGame(prevCells);
 }
 
 function handleSave(e) {
@@ -194,6 +210,7 @@ function createField(prevCells) {
       field.append(cell);
     }
   }
+
   field.ondragover = e => e.preventDefault();
   return field;
 }
@@ -279,7 +296,6 @@ function isCellNonInteractive(cell) {
 
 function handleCellClick(e, index) {
   const cell = cells[index];
-
   if (isCellNonInteractive(cell)) return;
   moveCell(index);
 }
@@ -330,7 +346,6 @@ function handleSizeChange(e) {
   moves = 0;
   seconds = 0;
   cellSize = FIELD_WIDTH / Math.sqrt(cellsCount);
-  localStorage.removeItem('game');
   startGame();
 }
 
@@ -367,7 +382,6 @@ function moveCell(index) {
       time = document.querySelector('.stats__time span').innerHTML;
     document.querySelector('.field').innerHTML = `Hooray! You solved the puzzle in ${time} and ${moves} moves!`;
     saveResults(moves, time);
-    localStorage.removeItem('game');
   }
 }
 
@@ -378,24 +392,17 @@ function saveResults(moves, time) {
   localStorage.setItem('results', JSON.stringify(results.sort((a, b) => b.moves - a.moves)).slice(0, 11));
 }
 
-function startGame() {
-  const game = JSON.parse(localStorage.getItem('game'));
-  let prevCells;
-  if (game) {
-    cellsCount = game?.cellsCount ?? 16;
-    moves = game?.moves ?? 0;
-    seconds = game?.seconds ?? 0;
-    emptyCell = game.cells.find(cell => cell.value === 0);
-    prevCells = game.cells;
-  } else {
+function startGame(prevCells) {
+  if (!prevCells) {
     emptyCell = {
       top: 0,
       left: 0,
       value: 0
     };
-    cells = [];
-    cells.push(emptyCell);
   }
+
+  cells = [];
+  cells.push(emptyCell);
 
   if (!cellsCount) cellsCount = 16;
 
