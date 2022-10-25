@@ -126,6 +126,7 @@ function handleSave(e) {
 }
 
 function handleResultsShow(e) {
+  handleSave(e);
   stopInterval();
   document.body.innerHTML = '';
 
