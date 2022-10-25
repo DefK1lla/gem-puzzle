@@ -208,8 +208,15 @@ function createField(prevCells) {
         top: (i - (i % Math.sqrt(cellsCount))) / Math.sqrt(cellsCount),
       };
       const value = numbers[i];
-      if (value === 0) continue;
-
+      if (value === 0) {
+        emptyCell = {
+          left: position.left,
+          top: position.top,
+          value
+        }
+        cells.push(emptyCell);
+        continue;
+      }
       const cell = createCell(i, value, cellSize, position, cellsCount);
       field.append(cell);
     }
@@ -399,14 +406,11 @@ function startGame(prevCells) {
   if (!prevCells) emptyCell = { top: 0, left: 0, value: 0 };
 
   cells = [];
-  cells.push(emptyCell);
 
   if (!cellsCount) cellsCount = 16;
 
-  numbers = [...new Array(cellsCount - 1).keys()]
-    .map(x => x + 1)
+  numbers = [...new Array(cellsCount).keys()]
     .sort((a, b) => Math.random() - 0.5);
-  numbers.unshift(0);
 
   document.body.innerHTML = '';
   stopInterval();
