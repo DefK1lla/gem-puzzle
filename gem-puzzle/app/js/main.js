@@ -22,10 +22,68 @@ let seconds;
 let isWin;
 let draggableIndex;
 
+
+function arrToMatrix(arr, elementsPerSubArray) {
+  let matrix = [], i, k;
+  for (i = 0, k = -1; i < arr.length; i++) {
+    if (i % elementsPerSubArray === 0) {
+      k++;
+      matrix[k] = [];
+    }
+    matrix[k].push(arr[i]);
+  }
+  return matrix;
+}
+
+function findCoordsByNumber(number, matrix) {
+  for (let y = 0; y < matrix.length; y++) {
+    for (let x = 0; x < matrix[y].length; x++) {
+      if (matrix[y][x] === number) return { y, x };
+    }
+  }
+  return null;
+}
+
+function isValidForSwap(coords, emptyCoords, matrix) {
+  const diffX = Math.abs(coords.x - emptyCoords.x);
+  const diffY = Math.abs(coords.y - emptyCoords.y);
+  return (diffX === 1 || diffY === 1) && (coords.x === emptyCoords.x || coords.y === emptyCoords.y);
+}
+
+function findValidCoords(emptyCoords, matrix) {
+  const validCoords = [];
+  for (let y = 0; y < matrix.length; y++) {
+    for (let x = 0; x < matrix[y].length; x++) {
+      const coords = { y, x };
+      const isValid = isValidForSwap(coords, emptyCoords, matrix);
+      if (isValid) validCoords.push(coords);
+    }
+  }
+  return validCoords;
+}
+
+function swap(swapCoords, emptyCoords, matrix) {
+  const swapNumber = matrix[swapCoords.x][swapCoords.y];
+  matrix[swapCoords.x][swapCoords.y] = matrix[emptyCoords.y][emptyCoords.x];
+  matrix[emptyCoords.y][emptyCoords.x] = swapNumber;
+}
+
+function randomSwap(matrix) {
+  const emptyCoords = findCoordsByNumber(0, matrix);
+  const validCoords = findValidCoords(emptyCoords, matrix);
+  const swapCoords = validCoords[Math.floor(Math.random() * validCoords.length)];
+  swap(swapCoords, emptyCoords, matrix);
+  return matrix;
+}
+
 function getNumbers(cellsCount) {
-  const numbers = [...new Array(cellsCount).keys()]
-    .sort((a, b) => Math.random() - 0.5);
-  return numbers;
+  let numbers = [...new Array(cellsCount - 1).keys()]
+    .map(x => x + 1);
+  if (Math.random() > 0.5) numbers.push(0);
+  else numbers.unshift(0);
+  numbers = arrToMatrix(numbers, Math.sqrt(cellsCount));
+  for (let i = 0; i < cellsCount * 10; i++) numbers = randomSwap(numbers);
+  return numbers.flat();
 }
 
 function createResultsTable() {
@@ -386,9 +444,10 @@ function moveCell(index, isDrag = false) {
   if (isAudio) CLICK_AUDIO.play();
 
   if (isDrag) cell.elem.style.transition = 'all 0s';
+  else cell.elem.style.transition = 'all 0.3s linear';
+
   cell.elem.style.left = emptyCell.left * cellSize + 'px';
   cell.elem.style.top = emptyCell.top * cellSize + 'px';
-  cell.elem.style.transition = 'transition: top 0.3s linear, left 0.3s linear';
 
   const currentLeft = cell.left,
     currentTop = cell.top;
@@ -420,7 +479,6 @@ function moveCell(index, isDrag = false) {
 function saveResults(moves, time) {
   const results = JSON.parse(localStorage.getItem('results')) ?? [];
   results.push({ moves, time });
-  console.log(results)
   localStorage.setItem('results', JSON.stringify(results.sort((a, b) => a.moves - b.moves)));
 }
 
