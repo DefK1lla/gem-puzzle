@@ -79,6 +79,7 @@ function createBtns(isStarted = true) {
 
   audioText.innerHTML = 'Sound';
   toggleAudio.type = 'checkbox';
+  toggleAudio.checked = isAudio;
   audioLabel.append(toggleAudio, audioText);
   toggleAudio.addEventListener('change', handleAudioToggle);
 
