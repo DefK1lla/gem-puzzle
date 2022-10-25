@@ -138,7 +138,6 @@ function handleResultsShow(e) {
 
 function handleAudioToggle(e) {
   isAudio = e.target.checked;
-  console.log(isAudio)
   localStorage.setItem('isAudio', isAudio);
 }
 
@@ -264,7 +263,7 @@ function handleTouchEnd(e, index) {
   const cell = cells[index];
   if (isCellNonInteractive(cell)) return e.preventDefault();
 
-  const touch = e.targetTouches[0]
+  const touch = e.targetTouches[0];
   const { xCondition, yCondition } = getConditions(touch);
 
   if (xCondition && yCondition) moveCell(index);
@@ -272,6 +271,7 @@ function handleTouchEnd(e, index) {
 
 function handleDragStart(e, index) {
   const cell = cells[index];
+  if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) return;
   if (isCellNonInteractive(cell)) return e.preventDefault();
   requestAnimationFrame(() => cell.elem.style.visibility = 'hidden', 0);
 }
