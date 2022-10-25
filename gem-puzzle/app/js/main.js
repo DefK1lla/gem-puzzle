@@ -255,10 +255,7 @@ function getConditions(e) {
   const xCondition = dragPos.left >= emptyPos.left && dragPos.left <= emptyPos.left + cellSize,
     yCondition = dragPos.top >= emptyPos.top && dragPos.top <= emptyPos.top + cellSize;
 
-  return {
-    xCondition,
-    yCondition
-  };
+  return { xCondition, yCondition };
 }
 
 function handleTouchEnd(e, index) {
@@ -386,20 +383,14 @@ function moveCell(index) {
 }
 
 function saveResults(moves, time) {
-  const prevResults = localStorage.getItem('results');
-  const results = prevResults ? JSON.parse(prevResults) : [];
+  let results = JSON.parse(localStorage.getItem('results')) ?? [];
   results.push({ moves, time });
-  localStorage.setItem('results', JSON.stringify(results.sort((a, b) => b.moves - a.moves)).slice(0, 11));
+  results = results.sort((a, b) => b.moves - a.moves).slice(0, 11);
+  localStorage.setItem('results', JSON.stringify(results));
 }
 
 function startGame(prevCells) {
-  if (!prevCells) {
-    emptyCell = {
-      top: 0,
-      left: 0,
-      value: 0
-    };
-  }
+  if (!prevCells) emptyCell = { top: 0, left: 0, value: 0 };
 
   cells = [];
   cells.push(emptyCell);
