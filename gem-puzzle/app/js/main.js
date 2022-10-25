@@ -20,6 +20,13 @@ let interval;
 let moves;
 let seconds;
 let isWin;
+let draggableIndex;
+
+function getNumbers(cellsCount) {
+  const numbers = [...new Array(cellsCount).keys()]
+    .sort((a, b) => Math.random() - 0.5);
+  return numbers;
+}
 
 function createResultsTable() {
   const table = document.createElement('table');
@@ -221,9 +228,24 @@ function createField(prevCells) {
       field.append(cell);
     }
   }
-
-  field.ondragover = e => e.preventDefault();
+  field.addEventListener('dragover', handleDragOver);
   return field;
+}
+
+function handleDragOver(e) {
+  const cell = cells[draggableIndex];
+  const cellPos = {
+    left: cell.left * cellSize,
+    top: cell.top * cellSize
+  };
+  const dragPos = {
+    left: e.pageX - fieldOffset.left,
+    top: e.pageY - fieldOffset.top
+  }
+  const cellConditions = (dragPos.left >= cellPos.left && dragPos.left <= cellPos.left + cellSize) &&
+    (dragPos.top >= cellPos.top && dragPos.top <= cellPos.top + cellSize);
+  const { xCondition, yCondition } = getConditions(e);
+  if ((xCondition && yCondition) || cellConditions) e.preventDefault();
 }
 
 function createCell(index, value, cellSize, position) {
@@ -274,14 +296,13 @@ function handleTouchEnd(e, index) {
 
   const cell = cells[index];
   if (isCellNonInteractive(cell)) return e.preventDefault();
-
   const touch = e.targetTouches[0];
   const { xCondition, yCondition } = getConditions(touch);
-
   if (xCondition && yCondition) moveCell(index);
 }
 
 function handleDragStart(e, index) {
+  draggableIndex = index;
   const cell = cells[index];
   if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) return;
   if (isCellNonInteractive(cell)) return e.preventDefault();
@@ -292,7 +313,7 @@ function handleDragEnd(e, index) {
   const cell = cells[index];
   const { xCondition, yCondition } = getConditions(e);
 
-  if (xCondition && yCondition) moveCell(index);
+  if (xCondition && yCondition) moveCell(index, true);
   requestAnimationFrame(() => cell.elem.style.visibility = 'visible', 0);
 }
 
@@ -357,15 +378,17 @@ function handleSizeChange(e) {
   startGame();
 }
 
-function moveCell(index) {
+function moveCell(index, isDrag = false) {
   const cell = cells[index];
 
   document.querySelector('.stats__moves span').innerHTML++;
 
   if (isAudio) CLICK_AUDIO.play();
 
+  if (isDrag) cell.elem.style.transition = 'all 0s';
   cell.elem.style.left = emptyCell.left * cellSize + 'px';
   cell.elem.style.top = emptyCell.top * cellSize + 'px';
+  cell.elem.style.transition = 'transition: top 0.3s linear, left 0.3s linear';
 
   const currentLeft = cell.left,
     currentTop = cell.top;
@@ -409,8 +432,7 @@ function startGame(prevCells) {
 
   if (!cellsCount) cellsCount = 16;
 
-  numbers = [...new Array(cellsCount).keys()]
-    .sort((a, b) => Math.random() - 0.5);
+  numbers = getNumbers(cellsCount);
 
   document.body.innerHTML = '';
   stopInterval();
