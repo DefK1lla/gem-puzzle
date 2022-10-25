@@ -126,7 +126,8 @@ function handleSave(e) {
 }
 
 function handleResultsShow(e) {
-  handleSave(e);
+  const isSave = confirm('Save the game?');
+  if (isSave) handleSave(e);
   stopInterval();
   document.body.innerHTML = '';
 
