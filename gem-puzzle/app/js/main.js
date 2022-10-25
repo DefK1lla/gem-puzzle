@@ -19,7 +19,7 @@ let numbers;
 let interval;
 let moves;
 let seconds;
-
+let isWin;
 
 function createResultsTable() {
   const table = document.createElement('table');
@@ -46,7 +46,7 @@ function createResultsTable() {
           <td>${res.moves}</td>
           <td>${res.time}</td>
         </tr>
-      `))
+      `)).join(' ')
     }
   `;
 
@@ -126,8 +126,11 @@ function handleSave(e) {
 }
 
 function handleResultsShow(e) {
-  const isSave = confirm('Save the game?');
-  if (isSave) handleSave(e);
+  if (!isWin) {
+    const isSave = confirm('Save the game?');
+    if (isSave) handleSave(e);
+  }
+
   stopInterval();
   document.body.innerHTML = '';
 
@@ -280,7 +283,6 @@ function handleDragStart(e, index) {
 
 function handleDragEnd(e, index) {
   const cell = cells[index];
-
   const { xCondition, yCondition } = getConditions(e);
 
   if (xCondition && yCondition) moveCell(index);
@@ -368,6 +370,7 @@ function moveCell(index) {
   emptyCell.top = currentTop;
 
   const isFinished = cells.every(cell => {
+    isWin = true;
     if (cell === emptyCell) return true;
 
     return emptyCell.top === 0 && emptyCell.left === 0
@@ -385,13 +388,14 @@ function moveCell(index) {
 }
 
 function saveResults(moves, time) {
-  let results = JSON.parse(localStorage.getItem('results')) ?? [];
+  const results = JSON.parse(localStorage.getItem('results')) ?? [];
   results.push({ moves, time });
-  results = results.sort((a, b) => b.moves - a.moves).slice(0, 11);
-  localStorage.setItem('results', JSON.stringify(results));
+  console.log(results)
+  localStorage.setItem('results', JSON.stringify(results.sort((a, b) => a.moves - b.moves)));
 }
 
 function startGame(prevCells) {
+  isWin = false;
   if (!prevCells) emptyCell = { top: 0, left: 0, value: 0 };
 
   cells = [];
