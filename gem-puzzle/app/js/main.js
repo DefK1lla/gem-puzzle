@@ -22,6 +22,7 @@ let seconds;
 let isWin;
 let draggableIndex;
 
+function isTouch() { return ('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch; }
 
 function arrToMatrix(arr, elementsPerSubArray) {
   let matrix = [], i, k;
@@ -326,9 +327,9 @@ function createCell(index, value, cellSize, position) {
   cell.innerHTML = value;
 
   cell.addEventListener('click', (e) => handleCellClick(e, index));
+  cell.addEventListener('touchmove', (e) => handleTouchEnd(e, index));
   cell.addEventListener('dragstart', (e) => handleDragStart(e, index));
   cell.addEventListener('dragend', (e) => handleDragEnd(e, index));
-  cell.addEventListener('touchmove', (e) => handleTouchEnd(e, index));
 
 
   return cell;
@@ -351,7 +352,6 @@ function getConditions(e) {
 
 function handleTouchEnd(e, index) {
   e.preventDefault();
-
   const cell = cells[index];
   if (isCellNonInteractive(cell)) return e.preventDefault();
   const touch = e.targetTouches[0];
@@ -362,9 +362,8 @@ function handleTouchEnd(e, index) {
 function handleDragStart(e, index) {
   draggableIndex = index;
   const cell = cells[index];
-  if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) return;
   if (isCellNonInteractive(cell)) return e.preventDefault();
-  requestAnimationFrame(() => cell.elem.style.visibility = 'hidden', 0);
+  if (!isTouch()) requestAnimationFrame(() => cell.elem.style.visibility = 'hidden', 0);
 }
 
 function handleDragEnd(e, index) {
