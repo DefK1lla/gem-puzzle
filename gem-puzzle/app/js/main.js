@@ -168,6 +168,7 @@ function handleStart(e) {
 function handleLoad(e) {
   const game = JSON.parse(localStorage.getItem('game'));
   if (!game) return;
+  isWin = false;
   cellsCount = game?.cellsCount ?? 16;
   moves = game?.moves ?? 0;
   seconds = game?.seconds ?? 0;
@@ -178,8 +179,8 @@ function handleLoad(e) {
 }
 
 function handleSave(e) {
+  if (isWin) return;
   const game = {};
-
   game.moves = document.querySelector('.stats__moves span').innerHTML;
   game.seconds = seconds;
   game.cellsCount = document.querySelector('.difficulty__current span').innerHTML.split('x')[0] ** 2;
@@ -265,7 +266,15 @@ function createField(prevCells) {
 
   for (let i = 0; i < cellsCount; i++) {
     if (prevCells && prevCells[i]) {
-      if (prevCells[i].value === 0) continue;
+      if (prevCells[i].value === 0) {
+        emptyCell = {
+          left: prevCells[i].left,
+          top: prevCells[i].top,
+          value: prevCells[i].value
+        }
+        cells.push(emptyCell);
+        continue;
+      }
       const cell = createCell(i, prevCells[i].value, cellSize, prevCells[i], cellsCount);
       field.append(cell);
     } else {
@@ -459,7 +468,6 @@ function moveCell(index, isDrag = false) {
   emptyCell.top = currentTop;
 
   const isFinished = cells.every(cell => {
-    isWin = true;
     if (cell === emptyCell) return true;
 
     return emptyCell.top === 0 && emptyCell.left === 0
@@ -468,6 +476,7 @@ function moveCell(index, isDrag = false) {
   });
 
   if (isFinished) {
+    isWin = true;
     stopInterval();
     const moves = document.querySelector('.stats__moves span').innerHTML,
       time = document.querySelector('.stats__time span').innerHTML;
