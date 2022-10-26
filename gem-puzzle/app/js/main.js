@@ -441,6 +441,7 @@ function moveCell(index, isDrag = false) {
 
   document.querySelector('.stats__moves span').innerHTML++;
 
+  CLICK_AUDIO.currentTime = 0;
   if (isAudio) CLICK_AUDIO.play();
 
   if (isDrag) cell.elem.style.transition = 'all 0s';
