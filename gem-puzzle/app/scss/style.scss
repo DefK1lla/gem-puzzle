@@ -1,0 +1,129 @@
+@import "vars";
+@import "libs";
+@import "base";
+
+.btn {
+  padding: 10px;
+
+  color: #fff;
+
+  background: #0D9095;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+
+  &:hover {
+    background: #094f52;
+  }
+
+  &_active {
+    background: #094f52;
+  }
+
+  &:disabled {
+    background: #555555;
+    pointer-events: none;
+  }
+}
+
+.btns {
+  width: 320px;
+
+  margin: 15px auto;
+
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.stats {
+  width: 320px;
+
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+
+  font-size: 16px;
+}
+
+.field {
+  position: relative;
+
+  margin: 0 auto 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 25px;
+  text-align: center;
+  user-select: none;
+
+  border: 1px solid #000;
+  overflow: hidden;
+}
+
+.cell {
+  position: absolute;
+
+  font-size: 22px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: #fff;
+  border: 1px solid #000;
+  cursor: pointer;
+  visibility: visible;
+  opacity: 1;
+
+  transition: top 0.3s linear, left 0.3s linear;
+
+  &.hidden {
+    visibility: hidden;
+  }
+}
+
+.empty {
+  background: transparent;
+  font-size: 0;
+  color: none;
+}
+
+.difficulty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 14px;
+
+  &__current {
+    width: 100%;
+
+    margin-bottom: 10px;
+
+    text-align: center;
+  }
+
+  &__other {
+    display: flex;
+  }
+
+  &__list {
+    display: flex;
+  }
+
+  &__item {
+    margin: 0 3px;
+  }
+}
+
+.results-placeholder {
+  margin: 0 auto;
+
+  text-align: center;
+}
+
+@import "media";
