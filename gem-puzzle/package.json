@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "homepage": "https://rolling-scopes-school.github.io/defk1lla-JSFE2022Q3",
+  "homepage": "https://defk1lla.github.io/gem-puzzle",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "deploy": "gh-pages -d dist"
